@@ -1,0 +1,74 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #ffffff;
+    color: #343a40;
+}
+
+#demo-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #e10d0d;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.text-select-accuont {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0d6efd;
+    text-align: center;
+    margin-top: 20px;
+
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html {
+    overflow-y: scroll;
+}
+
+.dropdown-menu.show {
+    display: block !important;
+}
+
+#dropdown-menu {
+    position: fixed;
+    top: 30;
+    right: 0;
+    margin-right: 10px;
+    width: 150px;
+    height: auto;
+    overflow: hidden;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+
+#gallery img {
+    width: 100%;
+    height: 200px;
+    /* cố định chiều cao */
+    object-fit: cover;
+    /* crop ảnh cho đẹp */
+    border-radius: 10px;
+    /* bo góc */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* đổ bóng */
+    transition: transform 0.3s ease;
+}
+
+#gallery img:hover {
+    transform: scale(1.05);
+    /* phóng to nhẹ khi hover */
+}
+
+#dropdown-menu ul {
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
