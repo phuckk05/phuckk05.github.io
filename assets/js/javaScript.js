@@ -1,26 +1,371 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const gallery = document.getElementById('gallery');
+let currentTab = 1;
+let navItems = [];
+let loveUnlocked = false;
+let pendingProtectedTab = null;
+let lockOverlay;
+let lockForm;
+let lockInput;
+let lockError;
+let lockCancel;
+let loveHeartAnimationInitialized = false;
+let loveHeartAnimationEnsureSize = null;
 
-    for (let i = 1; i <= 31; i++) {
-        const img = document.createElement('img');
-        img.src = "assets/image/blog-" + i + ".jpg";
-        img.alt = "Ảnh " + i;
-        gallery.appendChild(img);
+function queueFrame(callback) {
+    const raf = window.requestAnimationFrame
+        || window.webkitRequestAnimationFrame
+        || window.mozRequestAnimationFrame
+        || window.oRequestAnimationFrame
+        || window.msRequestAnimationFrame;
+
+    if (raf) {
+        raf.call(window, callback);
+    } else {
+        window.setTimeout(callback, 16);
+    }
+}
+
+function initLoveHeartAnimation() {
+    if (loveHeartAnimationInitialized) {
+        return;
     }
 
+    const canvas = document.getElementById('love-canvas');
+    if (!canvas) {
+        return;
+    }
+
+    if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.webkitRequestAnimationFrame
+            || window.mozRequestAnimationFrame
+            || window.oRequestAnimationFrame
+            || window.msRequestAnimationFrame
+            || function (callback) {
+                return window.setTimeout(callback, 16);
+            };
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        return;
+    }
+
+    loveHeartAnimationInitialized = true;
+
+    const mobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test((navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase());
+    const rand = Math.random;
+    const traceCount = mobile ? 20 : 50;
+    const config = {
+        traceK: 0.4,
+        timeDelta: 0.01
+    };
+
+    const heartPosition = rad => [
+        Math.pow(Math.sin(rad), 3),
+        -(15 * Math.cos(rad) - 5 * Math.cos(2 * rad) - 2 * Math.cos(3 * rad) - Math.cos(4 * rad))
+    ];
+
+    const scaleAndTranslate = (pos, sx, sy, dx, dy) => [
+        dx + pos[0] * sx,
+        dy + pos[1] * sy
+    ];
+
+    const dr = mobile ? 0.3 : 0.1;
+    const pointsOrigin = [];
+    for (let angle = 0; angle < Math.PI * 2; angle += dr) {
+        pointsOrigin.push(scaleAndTranslate(heartPosition(angle), 210, 13, 0, 0));
+    }
+    for (let angle = 0; angle < Math.PI * 2; angle += dr) {
+        pointsOrigin.push(scaleAndTranslate(heartPosition(angle), 150, 9, 0, 0));
+    }
+    for (let angle = 0; angle < Math.PI * 2; angle += dr) {
+        pointsOrigin.push(scaleAndTranslate(heartPosition(angle), 90, 5, 0, 0));
+    }
+
+    const heartPointsCount = pointsOrigin.length;
+    const targetPoints = new Array(heartPointsCount);
+
+    const pulse = (kx, ky, width, height) => {
+        for (let i = 0; i < heartPointsCount; i += 1) {
+            const originPoint = pointsOrigin[i];
+            targetPoints[i] = [
+                kx * originPoint[0] + width / 2,
+                ky * originPoint[1] + height / 2
+            ];
+        }
+    };
+
+    const particles = [];
+    let width = 0;
+    let height = 0;
+
+    const createParticles = () => {
+        particles.length = 0;
+        for (let i = 0; i < heartPointsCount; i += 1) {
+            const x = rand() * width;
+            const y = rand() * height;
+            const trace = Array.from({ length: traceCount }, () => ({ x, y }));
+            particles.push({
+                vx: 0,
+                vy: 0,
+                speed: rand() + 5,
+                q: Math.floor(rand() * heartPointsCount),
+                D: (i % 2 === 0 ? -1 : 1),
+                force: 0.2 * rand() + 0.7,
+                color: `hsla(0,${Math.floor(40 * rand() + 60)}%,${Math.floor(60 * rand() + 20)}%,0.3)`,
+                trace
+            });
+        }
+    };
+
+    const resizeCanvas = () => {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            queueFrame(resizeCanvas);
+            return;
+        }
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = rect.width * ratio;
+        canvas.height = rect.height * ratio;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        width = rect.width;
+        height = rect.height;
+        ctx.fillStyle = 'rgba(0,0,0,1)';
+        ctx.fillRect(0, 0, width, height);
+        createParticles();
+    };
+
+    loveHeartAnimationEnsureSize = () => {
+        resizeCanvas();
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let time = 0;
+
+    const loop = () => {
+        if (width === 0 || height === 0) {
+            queueFrame(loop);
+            return;
+        }
+        const n = -Math.cos(time);
+        pulse((1 + n) * 0.5, (1 + n) * 0.5, width, height);
+        const timeStep = (Math.sin(time) < 0 ? 9 : (n > 0.8 ? 0.2 : 1)) * config.timeDelta;
+        time += timeStep;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0, 0, width, height);
+
+        for (let i = particles.length - 1; i >= 0; i -= 1) {
+            const particle = particles[i];
+            const target = targetPoints[particle.q];
+            if (!target) {
+                continue;
+            }
+
+            const dx = particle.trace[0].x - target[0];
+            const dy = particle.trace[0].y - target[1];
+            const distance = Math.sqrt(dx * dx + dy * dy) || 0.001;
+
+            if (distance < 10) {
+                if (rand() > 0.95) {
+                    particle.q = Math.floor(rand() * heartPointsCount);
+                } else {
+                    if (rand() > 0.99) {
+                        particle.D *= -1;
+                    }
+                    particle.q += particle.D;
+                    particle.q %= heartPointsCount;
+                    if (particle.q < 0) {
+                        particle.q += heartPointsCount;
+                    }
+                }
+            }
+
+            particle.vx += (-dx / distance) * particle.speed;
+            particle.vy += (-dy / distance) * particle.speed;
+            particle.trace[0].x += particle.vx;
+            particle.trace[0].y += particle.vy;
+            particle.vx *= particle.force;
+            particle.vy *= particle.force;
+
+            for (let k = 0; k < particle.trace.length - 1; k += 1) {
+                const current = particle.trace[k];
+                const next = particle.trace[k + 1];
+                next.x -= config.traceK * (next.x - current.x);
+                next.y -= config.traceK * (next.y - current.y);
+            }
+
+            ctx.fillStyle = particle.color;
+            for (let k = 0; k < particle.trace.length; k += 1) {
+                const point = particle.trace[k];
+                ctx.fillRect(point.x, point.y, 1, 1);
+            }
+        }
+
+        queueFrame(loop);
+    };
+
+    queueFrame(loop);
+}
+
+function setActiveNav(index) {
+    if (!navItems.length) {
+        return;
+    }
+
+    navItems.forEach(item => {
+        const tab = Number(item.dataset.tab);
+        if (tab === index) {
+            item.classList.add('border-b-4', 'border-white');
+        } else {
+            item.classList.remove('border-b-4', 'border-white');
+        }
+    });
+}
+
+function openLockModal() {
+    if (!lockOverlay) {
+        return;
+    }
+    lockOverlay.classList.remove('hidden');
+    lockOverlay.setAttribute('aria-hidden', 'false');
+    if (lockError) {
+        lockError.classList.add('hidden');
+    }
+    if (lockInput) {
+        lockInput.value = '';
+        setTimeout(() => lockInput.focus(), 20);
+    }
+}
+
+function closeLockModal(options = {}) {
+    const { restoreNav = true, clearPending = true } = options;
+    if (!lockOverlay) {
+        return;
+    }
+    lockOverlay.classList.add('hidden');
+    lockOverlay.setAttribute('aria-hidden', 'true');
+    if (lockInput) {
+        lockInput.value = '';
+    }
+    if (lockError) {
+        lockError.classList.add('hidden');
+    }
+    if (restoreNav) {
+        setActiveNav(currentTab);
+    }
+    if (clearPending) {
+        pendingProtectedTab = null;
+    }
+}
+
+function activateTab(index) {
+    const main1 = document.getElementById('main-1');
+    const main2 = document.getElementById('main-2');
+    const main3 = document.getElementById('main-3');
+    const main4 = document.getElementById('main-4');
+    const main5 = document.getElementById('main-5');
+
+    const sections = [main1, main2, main3, main4, main5];
+    sections.forEach(section => {
+        if (section) {
+            section.classList.add('hidden');
+        }
+    });
+
+    const target = sections[index - 1];
+    if (target) {
+        target.classList.remove('hidden');
+        currentTab = index;
+        setActiveNav(currentTab);
+        if (index === 5) {
+            queueFrame(() => {
+                initLoveHeartAnimation();
+                if (typeof loveHeartAnimationEnsureSize === 'function') {
+                    loveHeartAnimationEnsureSize();
+                }
+            });
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const gallery = document.getElementById('gallery');
+    if (gallery) {
+        for (let i = 1; i <= 31; i++) {
+            const img = document.createElement('img');
+            img.src = "assets/image/blog-" + i + ".jpg";
+            img.alt = "Ảnh " + i;
+            gallery.appendChild(img);
+        }
+    }
+
+    navItems = Array.from(document.querySelectorAll('nav .ui-item'));
 
     const uiItems = document.querySelectorAll('.ui-item');
-
     uiItems.forEach(item => {
         item.addEventListener('click', () => {
-            // Xóa border-2 của tất cả ui-item
-            uiItems.forEach(el => {
-                el.classList.remove('border-b-4', 'border-white');
-            });
-
-            // Thêm border-2 cho item được bấm
-            item.classList.add('border-b-4', 'border-white');
+            const tab = Number(item.dataset.tab);
+            if (!Number.isNaN(tab)) {
+                setActiveNav(tab);
+            }
         });
+    });
+
+    setActiveNav(currentTab);
+
+    lockOverlay = document.getElementById('lock-overlay');
+    lockForm = document.getElementById('lock-form');
+    lockInput = document.getElementById('lock-input');
+    lockError = document.getElementById('lock-error');
+    lockCancel = document.getElementById('lock-cancel');
+
+    if (lockForm) {
+        lockForm.addEventListener('submit', event => {
+            event.preventDefault();
+            const attempt = lockInput ? lockInput.value.trim() : '';
+            if (attempt === 'thienthan') {
+                loveUnlocked = true;
+                const targetTab = pendingProtectedTab ?? 5;
+                closeLockModal({ restoreNav: false, clearPending: false });
+                pendingProtectedTab = null;
+                activateTab(targetTab);
+            } else {
+                if (lockError) {
+                    lockError.classList.remove('hidden');
+                }
+                if (lockInput) {
+                    lockInput.focus();
+                }
+            }
+        });
+    }
+
+    if (lockCancel) {
+        lockCancel.addEventListener('click', () => {
+            closeLockModal();
+        });
+    }
+
+    if (lockOverlay) {
+        lockOverlay.addEventListener('click', event => {
+            if (event.target === lockOverlay) {
+                closeLockModal();
+            }
+        });
+    }
+
+    if (lockInput && lockError) {
+        lockInput.addEventListener('input', () => {
+            lockError.classList.add('hidden');
+        });
+    }
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && lockOverlay && !lockOverlay.classList.contains('hidden')) {
+            closeLockModal();
+        }
     });
 
     const textElement = document.getElementById("typing-text");
@@ -117,27 +462,11 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function change(index) {
-    const main1 = document.getElementById('main-1');
-    const main2 = document.getElementById('main-2');
-    const main3 = document.getElementById('main-3');
-    const main4 = document.getElementById('main-4');
-
-
-    const allMains = [main1, main2, main3, main4];
-
-    allMains.forEach(main => {
-        if (main) {
-            main.classList.add('hidden');
-        }
-    });
-
-    if (index === 1 && main1) {
-        main1.classList.remove('hidden');
-    } else if (index === 2 && main2) {
-        main2.classList.remove('hidden');
-    } else if (index === 3 && main3) {
-        main3.classList.remove('hidden');
-    } else if (index === 4 && main4) {
-        main4.classList.remove('hidden');
+    if (index === 5 && !loveUnlocked) {
+        pendingProtectedTab = index;
+        openLockModal();
+        return;
     }
+
+    activateTab(index);
 }

@@ -28,21 +28,34 @@
             <a href="index.html" class="text-xl font-bold text-white">Phúckk</a>
             <nav class="hidden md:block">
                 <ul class="flex space-x-8 text-gray-400 gap-8">
-                    <li><a onclick="change(1)"
+                    <li><a onclick="change(1)" data-tab="1"
                             class="border-b-4 border-white pb-2 ui-item font-bold transition duration-300 hover:text-white cursor-pointer">Home</a>
                     </li>
-                    <li><a onclick="change(2)"
+                    <li><a onclick="change(2)" data-tab="2"
                             class="ui-item  font-bold pb-2 transition duration-300 hover:text-white cursor-pointer">About</a>
                     </li>
-                    <li><a onclick="change(3)"
+                    <li><a onclick="change(3)" data-tab="3"
                             class="ui-item font-bold pb-2 transition duration-300 hover:text-white cursor-pointer">Portfolio</a>
                     </li>
-                    <li><a onclick="change(4)"
+                    <li><a onclick="change(4)" data-tab="4"
                             class="ui-item  font-bold pb-2 transition duration-300 hover:text-white cursor-pointer">Blog</a>
+                    </li>
+                    <li><a onclick="change(5)" data-tab="5"
+                            class="ui-item  font-bold pb-2 transition duration-300 hover:text-white cursor-pointer">Love</a>
                     </li>
                 </ul>
             </nav>
             <div class="flex items-center space-x-4">
+                <!-- Icon facebook -->
+                <a href="https://www.facebook.com/SingleNotSorry"
+                    class="text-gray-400 transition duration-300 hover:text-white pr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.326v21.348c0 .732.593 1.326 1.325 1.326h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.894-4.788 4.659-4.788 1.325 0 2.466.099 2.797.143v3.24l-1.918.001c-1.504 0-1.796.715-1.796 1.763v2.312h3.59l-.467 3.622h-3.123v9.294h6.116c.73 0 1.324-.594 1.324-1.326v-21.35c0-.733-.594-1.326-1.325-1.326z" />
+                    </svg>
+                </a>
+
+                <!-- Icon github -->
                 <a href="https://github.com/phuckk05"
                     class="text-gray-400 transition duration-300 hover:text-white pr-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
@@ -61,20 +74,24 @@
                     </button>
                     <div id="dropdown-menu"
                         class="dropdown-menu hidden md:hidden absolute mt-2 bg-white border border-stone-200 rounded-lg shadow-sm p-1 z-10 cursor-pointer">
-                        <a onclick="change(1)"
+                        <a onclick="change(1)" data-tab="1"
                             class="block px-4 py-2 text-sm text-stone-800 hover:bg-stone-100 rounded-md">
                             Home</a>
-                        <a onclick="change(2)"
+                        <a onclick="change(2)" data-tab="2"
                             class="block px-4 py-2 text-sm text-stone-800 hover:bg-stone-100 rounded-md">
                             About</a>
-                        <a onclick="change(3)"
+                        <a onclick="change(3)" data-tab="3"
                             class="block px-4 py-2 text-sm text-stone-800 hover:bg-stone-100 rounded-md">
                             Portfolio</a>
-                        <a onclick="change(4)"
+                        <a onclick="change(4)" data-tab="4"
                             class="block px-4 py-2 text-sm text-stone-800 hover:bg-stone-100 rounded-md ">
                             Blog</a>
+                        <a onclick="change(5)" data-tab="5"
+                            class="block px-4 py-2 text-sm text-stone-800 hover:bg-stone-100 rounded-md ">
+                            Love</a>
                         <div class="h-px bg-stone-200 my-1"></div>
-                        <a href="#" class="block px-4 py-2 text-sm text-red-500 hover:bg-red-100 rounded-md"></a>
+                        <a href="mailto:contact@phuckk.dev"
+                            class="block px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded-md">Liên hệ</a>
                     </div>
                 </div>
             </div>
@@ -353,11 +370,21 @@
                         <div class="w-32 h-1 bg-yellow-400 rounded-full"></div>
                     </div>
                     <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-                        <img id="image" src="assets/image/blog-1.jpg" alt=""
-                            class="w-full h-48 object-cover rounded-lg"></img>
                     </div>
                 </div>
 
+            </div>
+        </section>
+    </main>
+    <main id="main-5" class="hidden min-h-screen pt-24 flex items-center justify-center bg-gray-900">
+        <section class="py-4 bg-gray-900 max-w-5xl">
+            <div class="container mx-auto px-4">
+                <div class="love-canvas-wrapper">
+                    <canvas id="love-canvas" aria-hidden="true"></canvas>
+                    <div class="love-overlay">
+                        <span class="love-overlay-note">Thiên Ân</span>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -375,6 +402,43 @@
             </svg>
         </button>
     </div> -->
+
+    <div id="lock-overlay"
+        class="hidden fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50"
+        aria-hidden="true">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 relative">
+            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
+                <div
+                    class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shadow-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                        class="w-10 h-10 text-white">
+                        <path
+                            d="M12.001 4.529c2.349-2.532 6.15-2.532 8.5 0 2.349 2.533 2.349 6.644 0 9.177l-7.424 8.003a1.5 1.5 0 0 1-2.152 0l-7.424-8.003c-2.349-2.533-2.349-6.644 0-9.177 2.35-2.532 6.151-2.532 8.5 0z" />
+                    </svg>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold text-center mt-10 text-white">Love Corner Locked</h2>
+            <p class="text-center text-gray-400 mt-2">Nhập mật khẩu bí mật để mở khoảnh khắc đặc biệt này.</p>
+            <form id="lock-form" class="mt-8 space-y-4">
+                <div>
+                    <label for="lock-input" class="block text-sm font-medium text-gray-300 mb-2">Mật khẩu</label>
+                    <input id="lock-input" type="password"
+                        class="w-full rounded-xl bg-gray-800 border border-gray-700 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                        placeholder="Nhập mật khẩu" autocomplete="off" required>
+                </div>
+                <p id="lock-error" class="hidden text-sm text-red-400">Sai mật khẩu rồi, thử lại nhé! 💔</p>
+                <div class="flex items-center justify-between gap-4 pt-2">
+                    <button type="button" id="lock-cancel"
+                        class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-3 rounded-xl transition">Để
+                        sau</button>
+                    <button type="submit"
+                        class="flex-1 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-400 hover:via-rose-400 hover:to-red-400 text-white font-semibold py-3 rounded-xl shadow-lg transition">Mở
+                        khóa</button>
+                </div>
+            </form>
+            <p class="text-xs text-gray-600 text-center mt-6">Design with ❤️ dành tặng người đặc biệt.</p>
+        </div>
+    </div>
 
 </body>
 
