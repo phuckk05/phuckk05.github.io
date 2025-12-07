@@ -16,12 +16,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <script src="assets/js/javaScript.js"></script>
     <title>Profile của Phúc xấu trai</title>
 
 </head>
 
-<body class="bg-gray-900 text-white">
+<body class="bg-gray-900 text-white relative overflow-x-hidden">
+    <!-- Particle Background -->
+    <canvas id="particle-canvas" class="fixed inset-0 z-0 pointer-events-none"></canvas>
+
 
     <header class="fixed top-0 left-0 right-0 z-50 p-4 bg-gray-900">
         <div class="container max-w-7xl flex items-center justify-between mx-auto">
@@ -103,17 +111,28 @@
         <div class="container flex flex-col items-center mx-auto md:flex-row md:justify-center md:space-x-8 px-4">
             <div class="flex-1 text-center md:text-left mb-12 md:mb-0">
                 <p class="mb-2 text-white text-lg">Hello World, I'm</p>
-                <h1 class="text-5xl font-extrabold text-white md:text-6xl">Đình Phúc</h1>
-                <h2 class="text-xl font-bold text-gray-400 mt-2">
-                    <span id="typing-text"></span><span id="cursor" class="text-white">|</span>
+                <h1
+                    class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 md:text-6xl mb-4">
+                    Đình Phúc</h1>
+                <h2 class="text-xl font-bold text-gray-300 mt-2 h-8">
+                    <span id="typing-text"></span><span class="animate-blink">|</span>
                 </h2>
-                <p class="mt-4 text-gray-500 text-lg">Welcome to My personal website 🌸</p>
+                <p class="mt-4 text-gray-400 text-lg">Welcome to My personal website 🌸</p>
             </div>
 
-            <div class="flex-1 flex justify-center items-center w-full">
-                <div class="relative p-2 rounded-full animate-pulse"
-                    style="box-shadow: 0 0 40px 10px rgba(252, 211, 77, 0.7);">
-                    <img src="assets/image/avatar-1.jpg" alt="Phúckk" class="rounded-full w-80 h-80 object-cover">
+            <div class="flex-1 flex justify-center items-center w-full relative z-10">
+                <div class="relative p-1 rounded-full bg-gradient-to-tr from-yellow-400 to-red-500 animate-spin-slow">
+                    <div class="bg-gray-900 rounded-full p-1">
+                        <img src="assets/image/avatar-1.jpg" alt="Phúckk"
+                            class="rounded-full w-80 h-80 object-cover border-4 border-gray-800">
+                    </div>
+                </div>
+                <!-- Decorative elements -->
+                <div
+                    class="absolute -top-4 -right-4 w-20 h-20 bg-yellow-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob">
+                </div>
+                <div
+                    class="absolute -bottom-8 -left-4 w-20 h-20 bg-red-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000">
                 </div>
             </div>
         </div>
@@ -393,6 +412,42 @@
     </div> -->
 
 
+
+    <!-- Name Input Modal -->
+    <div id="name-modal"
+        class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 flex items-center justify-center hidden backdrop-filter backdrop-blur-sm">
+        <div
+            class="bg-gray-800 bg-opacity-50 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-600 transform transition-all scale-100 backdrop-filter backdrop-blur-md">
+            <div class="text-center mb-6">
+                <div
+                    class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-yellow-500/30 animate-bounce-slow">
+                    <i class="fas fa-user-astronaut text-gray-900 text-3xl"></i>
+                </div>
+                <h2
+                    class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 mb-2">
+                    Welcome! 🚀</h2>
+                <p class="text-gray-300">Nhập tên của bạn để bắt đầu hành trình khám phá profile của mình nhé.</p>
+            </div>
+
+            <div class="space-y-5">
+                <div class="relative group">
+                    <div
+                        class="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-red-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200">
+                    </div>
+                    <input type="text" id="visitor-name-input"
+                        class="relative w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-white placeholder-gray-500 outline-none transition-all"
+                        placeholder="Tên của bạn là gì?..." autocomplete="off">
+                    <p id="name-error" class="text-red-400 text-sm mt-2 hidden absolute -bottom-6 left-0"><i
+                            class="fas fa-exclamation-circle mr-1"></i> Vui lòng nhập tên!</p>
+                </div>
+
+                <button id="submit-name-btn"
+                    class="w-full py-3 px-4 bg-gradient-to-r from-yellow-400 to-red-500 hover:from-yellow-500 hover:to-red-600 text-white font-bold rounded-lg shadow-lg transform transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 mt-2">
+                    Khám phá ngay <i class="fas fa-rocket ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
 </body>
 

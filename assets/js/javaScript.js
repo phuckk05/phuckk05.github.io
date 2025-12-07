@@ -470,3 +470,181 @@ function change(index) {
 
     activateTab(index);
 }
+
+// Firebase Logic
+document.addEventListener('DOMContentLoaded', function () {
+    const firebaseConfig = {
+        apiKey: "AIzaSyDi9hGm6bCVJwSkL2wr5D9edNK9myy9MAg",
+        authDomain: "phuckk-profile.firebaseapp.com",
+        databaseURL: "https://phuckk-profile-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "phuckk-profile",
+        storageBucket: "phuckk-profile.firebasestorage.app",
+        messagingSenderId: "259778554642",
+        appId: "1:259778554642:web:7dc51916c7774d056ea1cb",
+        measurementId: "G-9W44B8MWD4"
+    };
+
+    // Initialize Firebase
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Show Name Modal
+        const nameModal = document.getElementById('name-modal');
+        const nameInput = document.getElementById('visitor-name-input');
+        const submitBtn = document.getElementById('submit-name-btn');
+        const nameError = document.getElementById('name-error');
+
+        if (nameModal && nameInput && submitBtn) {
+            // Show modal immediately
+            nameModal.classList.remove('hidden');
+            nameInput.focus();
+
+            const submitName = () => {
+                const visitorName = nameInput.value.trim();
+
+                if (visitorName === "") {
+                    nameError.classList.remove('hidden');
+                    nameInput.classList.add('border-red-500');
+                    return;
+                }
+
+                // Disable input and button while saving
+                nameInput.disabled = true;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+
+                db.collection("visitors").add({
+                    name: visitorName,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    userAgent: navigator.userAgent
+                })
+                    .then((docRef) => {
+                        console.log("Visitor recorded with ID: ", docRef.id);
+                        // Hide modal with animation
+                        nameModal.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                        setTimeout(() => {
+                            nameModal.classList.add('hidden');
+                        }, 500);
+                    })
+                    .catch((error) => {
+                        console.error("Error adding document: ", error);
+                        // Allow retry
+                        nameInput.disabled = false;
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Thử lại';
+                        alert("Có lỗi xảy ra, vui lòng thử lại!");
+                    });
+            };
+
+            submitBtn.addEventListener('click', submitName);
+
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    submitName();
+                }
+            });
+
+            nameInput.addEventListener('input', () => {
+                if (nameInput.value.trim() !== "") {
+                    nameError.classList.add('hidden');
+                    nameInput.classList.remove('border-red-500');
+                }
+            });
+        }
+    } else {
+        console.error("Firebase SDK not loaded");
+    }
+});
+
+// Typing Effect
+const texts = ["Developer", "Designer", "Freelancer", "Gamer"];
+let count = 0;
+let index = 0;
+let currentText = "";
+let letter = "";
+
+(function type() {
+    if (count === texts.length) {
+        count = 0;
+    }
+    currentText = texts[count];
+    letter = currentText.slice(0, ++index);
+
+    const typingElement = document.getElementById("typing-text");
+    if (typingElement) {
+        typingElement.textContent = letter;
+    }
+
+    if (letter.length === currentText.length) {
+        count++;
+        index = 0;
+        setTimeout(type, 2000); // Wait before typing next word
+    } else {
+        setTimeout(type, 100);
+    }
+})();
+
+// Particle Background
+const canvas = document.getElementById("particle-canvas");
+if (canvas) {
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particlesArray;
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.directionX = (Math.random() * 0.4) - 0.2;
+            this.directionY = (Math.random() * 0.4) - 0.2;
+            this.size = Math.random() * 2;
+            this.color = '#ffffff';
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+        }
+        update() {
+            if (this.x > canvas.width || this.x < 0) {
+                this.directionX = -this.directionX;
+            }
+            if (this.y > canvas.height || this.y < 0) {
+                this.directionY = -this.directionY;
+            }
+            this.x += this.directionX;
+            this.y += this.directionY;
+            this.draw();
+        }
+    }
+
+    function init() {
+        particlesArray = [];
+        let numberOfParticles = (canvas.height * canvas.width) / 9000;
+        for (let i = 0; i < numberOfParticles; i++) {
+            particlesArray.push(new Particle());
+        }
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < particlesArray.length; i++) {
+            particlesArray[i].update();
+        }
+    }
+
+    window.addEventListener('resize', function () {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        init();
+    });
+
+    init();
+    animate();
+}
+
