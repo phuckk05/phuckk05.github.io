@@ -489,6 +489,18 @@ document.addEventListener('DOMContentLoaded', function () {
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Initialize EmailJS
+        // Replace with your actual EmailJS credentials
+        const EMAILJS_PUBLIC_KEY = "6eXxmxONlwXQBpfMh";
+        const EMAILJS_SERVICE_ID = "service_0b66sr6dsgds";
+        const EMAILJS_TEMPLATE_ID = "template_jqox8ac"; // You need to create a template in EmailJS dashboard
+
+        if (typeof emailjs !== 'undefined') {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+        } else {
+            console.error("EmailJS SDK not loaded");
+        }
+
         // Show Name Modal
         const nameModal = document.getElementById('name-modal');
         const nameInput = document.getElementById('visitor-name-input');
@@ -512,8 +524,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Disable input and button while saving
                 nameInput.disabled = true;
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
 
+                // 1. Save to Firestore
                 db.collection("visitors").add({
                     name: visitorName,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -521,6 +534,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                     .then((docRef) => {
                         console.log("Visitor recorded with ID: ", docRef.id);
+
+                        // 2. Send Email via EmailJS
+                        if (typeof emailjs !== 'undefined') {
+                            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Đang gửi mail...';
+
+                            const templateParams = {
+                                from_name: visitorName,
+                                message: `Có người tên là ${visitorName} vừa vào xem profile của bạn!`,
+                                reply_to: "no-reply@example.com"
+                            };
+
+                            return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+                        } else {
+                            return Promise.resolve(); // Skip email if SDK missing
+                        }
+                    })
+                    .then(() => {
+                        console.log("Email sent successfully!");
                         // Hide modal with animation
                         nameModal.classList.add('opacity-0', 'transition-opacity', 'duration-500');
                         setTimeout(() => {
@@ -528,12 +559,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         }, 500);
                     })
                     .catch((error) => {
-                        console.error("Error adding document: ", error);
-                        // Allow retry
-                        nameInput.disabled = false;
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Thử lại';
-                        alert("Có lỗi xảy ra, vui lòng thử lại!");
+                        console.error("Error:", error);
+                        // Even if email fails, we let them in if Firestore succeeded, or handle error
+                        // For now, let's assume if Firestore worked, we let them in. 
+                        // If Firestore failed, we show error.
+
+                        // Check if it was Firestore error or EmailJS error
+                        if (error.code) { // Firestore errors usually have code
+                            nameInput.disabled = false;
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Thử lại';
+                            alert("Có lỗi kết nối, vui lòng thử lại!");
+                        } else {
+                            // EmailJS error or other, still let them in but log it
+                            console.warn("Email sending failed but visitor recorded.");
+                            nameModal.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                            setTimeout(() => {
+                                nameModal.classList.add('hidden');
+                            }, 500);
+                        }
                     });
             };
 
