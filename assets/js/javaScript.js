@@ -540,9 +540,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Đang gửi mail...';
 
                             const templateParams = {
-                                from_name: visitorName,
-                                message: `Có người tên là ${visitorName} vừa vào xem profile của bạn!`,
-                                reply_to: "no-reply@example.com"
+                                title: "Có khách mới ghé thăm Profile!",
+                                name: visitorName,
+                                message: `Người dùng tên là ${visitorName} vừa truy cập vào website của bạn lúc ${new Date().toLocaleString()}.`,
+                                email: "visitor@example.com"
                             };
 
                             return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
